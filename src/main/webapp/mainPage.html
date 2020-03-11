@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<style>
+body {font-family: Arial, Helvetica, sans-serif;}
+
+/* Full-width input fields */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* Extra styles for the cancel button */
+.cancelbtn {
+  width: auto;
+  padding: 10px 18px;
+  background-color: #f44336;
+}
+
+/* Center the image and position the close button */
+.imgcontainer {
+  text-align: center;
+  margin: 24px 0 12px 0;
+  position: relative;
+}
+
+img.avatar {
+  width: 40%;
+  border-radius: 50%;
+}
+
+.container {
+  padding: 16px;
+}
+
+span.psw {
+  float: right;
+  padding-top: 16px;
+}
+</style>
+</head>
+<body>
+
+<h2>Welcome to your personal digital closet.</h2>
+<form action="item_added.html">
+  <input list="clothings" name="cloth">
+  <datalist id="clothings">
+    <option value="Pants">
+    <option value="Sweater">
+    <option value="T-shirt">
+    <option value="Socks">
+    <option value="Shoes">
+    <option value="Coat">
+    <option value="Dress">
+    <option value="Skirt">
+
+
+  </datalist>
+  <input list="colors" name="color">
+  <datalist id="colors">
+    <option value="Red">
+    <option value="Green">
+    <option value="Blue">
+    <option value="Orange">
+    <option value="Black">
+    <option value="White">
+  </datalist>
+  <input type="submit">
+</form>
+
+<script>
+// Get the modal
+var app = new Vue({
+      el: '#app',
+      data: {
+        message: 'Hello Vue!'
+      },
+
+      methods: {
+                    async startGame() {
+                        const response = await fetch('api/start', {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        const ans = await response.json();
+
+                    }
+                }
+            });
+</script>
+
+</body>

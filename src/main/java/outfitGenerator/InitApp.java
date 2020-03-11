@@ -1,6 +1,5 @@
 package outfitGenerator;
 import java.io.IOException;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServlet;
@@ -14,7 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.eclipse.jetty.http.HttpStatus;
+//import org.eclipse.jetty.http.HttpStatus;
 
 @Path("start")
 public class InitApp extends HttpServlet {
@@ -27,7 +26,7 @@ public class InitApp extends HttpServlet {
 		obj.put("success", false);
 		obj.put("message", "PEBKAC");		  				
 		
-		String output = obj.toString();//new JSONResultProcessor().createJSONResponse(mancala);
+		String output = obj.toString();
 		
 		return Response.status(200).entity(output).build();
 	}
