@@ -22,7 +22,7 @@ public class DBconnector implements AutoCloseable{
         driver.close();
     }
 
-    public void printGreeting( final String message ){
+    public void printGreeting( final String message){
         try ( Session session = driver.session() ){
             String greeting = session.writeTransaction( new TransactionWork<String>(){
                 @Override
@@ -37,6 +37,23 @@ public class DBconnector implements AutoCloseable{
             System.out.println( greeting );
         }
     }
+    
+    public void addItem( final String item, final String color ){
+    	//final String itemQ = "\""+ item + "\"";
+    	final String theName = "'Shikar Dhawan'";
+        try ( Session session = driver.session() ){
+        	String Clothing = session.writeTransaction( new TransactionWork<String>(){
+                    @Override
+                    public String execute( Transaction tx ){
+                    	Result result = tx.run( "CREATE (Dhawan:player{name:'theName' , YOB: 1990})");
+                        return result.single().get( 0 ).asString();
+                    }
+            } );
+        }
+
+    }
+    
+    
 
 
 }

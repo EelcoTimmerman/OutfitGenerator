@@ -26,8 +26,9 @@ public class itemAdder {
 	public Response receiveItem(@Context HttpServletRequest request, ItemData itemData) throws Exception {
         String i=itemData.getItem();
         String c=itemData.getColor();
-        try ( DBconnector greeter = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
-            greeter.printGreeting( "hello, world" );
+        try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
+            //db.addItem(i, c);
+            db.printGreeting("joo");
         }
 		
 		JSONObject output = new JSONObject();
