@@ -9,20 +9,13 @@ import org.neo4j.driver.TransactionWork;
 import static org.neo4j.driver.Values.parameters;
 
 
-
-
 public class DBconnector implements AutoCloseable{
     private final Driver driver;
 
     public DBconnector( String uri, String user, String password ){
         driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ) );
     }
-    
-    public static void main( String... args ) throws Exception{
-        try ( DBconnector greeter = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
-            greeter.printGreeting( "hello, world" );
-        }
-    }
+
 
     @Override
     public void close() throws Exception{

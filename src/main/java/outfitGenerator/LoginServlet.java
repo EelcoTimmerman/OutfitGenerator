@@ -10,6 +10,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -22,13 +23,13 @@ public class LoginServlet{
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	protected Response doPost(HttpServletRequest request, LoginData login) throws ServletException, IOException {  
-		JSONObject output = new JSONObject();
-        String name=login.getUsername();  
-
-		output.put("username", "u");
-          
+	public Response doPost(@Context HttpServletRequest request, LoginData login) throws ServletException, IOException {  
+        String name=login.getUsername();
         String password=login.getPassword();  
+
+
+		JSONObject output = new JSONObject();
+		output.put("username", name);         
 		String stringoutput = output.toJSONString();
 
         return Response.status(200).entity(stringoutput).build();

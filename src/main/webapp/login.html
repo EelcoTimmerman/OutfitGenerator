@@ -154,47 +154,26 @@
 
 <body>
 
-  <h2>Welcome to the Outfit Generator</h2>
+  
   <div id="app">
-    <login-screen v-if="page == 0" v-on:login-clicked="loginClicked">
+    <login-screen
+     v-if="page == 0"
+     v-on:login-clicked="loginClicked">
     </login-screen>
     <home-screen 
     v-else-if="page == 1"
-    v-bind:userMessage='test'>
+    v-bind:username="loginusername"
+    v-on:item-added="addItem">
     </home-screen>
-    <error-screen v-else>
+    <error-screen 
+    v-else>
     </error-screen>
 
   </div>
 
-  <!-- <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>
+  <!-- <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button> -->
 
-<div id="id01" class="modal">
-  
-  <form class="modal-content animate" action="mainPage.html" method="post">
-    <div class="imgcontainer">
-      <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
-    </div>
 
-    <div class="container">
-      <label for="uname"><b>Username</b></label>
-      <input type="text" placeholder="Enter Username" name="uname" required>
-
-      <label for="psw"><b>Password</b></label>
-      <input type="password" placeholder="Enter Password" name="psw" required>
-        
-      <button type="submit">Login</button>
-      <label>
-        <input type="checkbox" checked="checked" name="remember"> Remember me
-      </label>
-    </div>
-
-    <div class="container" style="background-color:#ebbc21">
-      <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
-      <span class="psw">Forgot <a href="#">password?</a></span>
-    </div>
-  </form>
-</div> -->
 
   <script>
     Vue.component('login-screen', {
@@ -205,15 +184,33 @@
           errorMessage: "",
         }
       },
-      template: `
-                    <div>  
-                        Name:<input placeholder="username"
-                            v-model="username"><br>  
-                        Password:<input placeholder="password"
-                            v-model="password"><br>  
-                        {{ errorMessage }}
-                        <button v-on:click="loginClicked">Log in</button>   
-                    </div>
+      template: `       
+         
+            <div class="modal-content animate" >
+              <h2>Welcome to the Outfit Generator</h2>
+                  <div class="imgcontainer">
+                    <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+                  </div>
+
+                  <div class="container">
+                    <label for="uname"><b>Username</b></label>
+                    <input type="text" placeholder="Enter Username" v-model="username">
+
+                    <label for="psw"><b>Password</b></label>
+                    <input type="password" placeholder="Enter Password" v-model="password">
+          
+                    <button v-on:click="loginClicked">Log in</button> 
+                    <label>
+                    <input type="checkbox" checked="checked" name="remember"> Remember me
+                    </label>
+                  </div>
+
+                  <div class="container" style="background-color:#ebbc21">
+                  <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+                  <span class="psw">Forgot <a href="#">password?</a></span>
+                  </div>
+            </div>
+         
                 `,
       methods: {
         loginClicked() {
@@ -233,33 +230,55 @@
     });
 
     Vue.component('home-screen', {
-      props: [ 'usernameMessage' ],
+      props: [ 'username' ],
+      data() {
+        return {
+          item2: undefined,
+          color: undefined,
+          errorMessage: "",
+        }
+      },
       template: `
-            <h2>Welcome, {{usernameMessage}}, to your personal digital closet.</h2>
-                            <form action="item_added.html">
-                            <input list="clothings" name="cloth">
+            <div>
+            <h2>Welcome, {{username}}, to your personal digital closet.</h2>
+            <h2>Add a new piece of clothing below.</h2>
+                            <input list="clothings" name="cloth" v-model="item2"></input>
                             <datalist id="clothings">
-                            <option value="Pants">
-                            <option value="Sweater">
-                            <option value="T-shirt">
-                            <option value="Socks">
-                            <option value="Shoes">
-                            <option value="Coat">
-                            <option value="Dress">
-                            <option value="Skirt">
-
-
-                          </datalist>
-                          <input list="colors" name="color">
+                            <option value="Pants"></option>
+                            <option value="Sweater"></option>
+                            <option value="T-shirt"></option>
+                            <option value="Socks"></option>
+                            <option value="Shoes"></option>
+                            <option value="Coat"></option>
+                            <option value="Dress"></option>
+                            <option value="Skirt"></option>
+                            </datalist>
+                          <input list="colors" name="color" v-model="color">
                           <datalist id="colors">
-                            <option value="Red">
-                            <option value="Green">
-                            <option value="Blue">
-                            <option value="Orange">
-                            <option value="Black">
-                            <option value="White">
+                            <option value="Red"></option>
+                            <option value="Green"></option>
+                            <option value="Blue"></option>
+                            <option value="Orange"></option>
+                            <option value="Black"></option>
+                            <option value="White"></option>
                           </datalist>
-                          <input type="submit"> `
+                          <input type="submit" v-on:click="additem" ></input>
+                          <br><div> {{this.errorMessage}}</div>
+              </div>`,
+      methods: {
+        additem() {
+          if (!this.item2) {
+            this.errorMessage = "Put item name!";
+            return;
+          }
+
+          if (!this.color) {
+            this.errorMessage = "Specify your color, please...";
+            return;
+          }        
+          this.$emit('item-added', this.item2, this.color);
+        }
+      }
     });
 
     Vue.component('error-screen', {
@@ -288,9 +307,25 @@
       el: '#app',
       data: {
         page: 0,
-        test: undefined
+        loginusername: undefined 
       },
       methods: {
+        async addItem(item1, color1) {
+          console.log(item1);
+          console.log(color1);
+
+          const response = await fetch('api/additem', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({item: item1, color: color1 })
+          });
+          const res = await response.json(); 
+          console.log("gfds");        
+
+        },
         async loginClicked(userName, passWord) {
           const response = await fetch('api/login', {
             method: 'POST',
@@ -300,18 +335,19 @@
             },
             body: JSON.stringify({ username: userName, password: passWord })
           });
-          const passwordCheck = await response.json();
-          this.test = passwordCheck;
-          console.log(passwordCheck);
-          if (passwordCheck == "u") {
-            this.page = 1;
-          } else {
+          const passwordCheck = await response.json(); 
+          console.log("Anja has corona.");        
+          if (passwordCheck.username == "false") {
             this.page = 2;
+          } else {
+            this.page = 1;
+            this.loginusername = passwordCheck.username;
           }
 
         }
+
       }
     });
-  </script>
+  </script> 
 
 </body>
