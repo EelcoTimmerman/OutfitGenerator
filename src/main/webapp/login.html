@@ -42,6 +42,12 @@
       background-color: #f44336;
     }
 
+    .nrmbtn {
+      width: auto;
+      padding: 10px 18px;
+      background-color: #330d7a;
+    }
+
     /* Center the image and position the close button */
     .imgcontainer {
       text-align: center;
@@ -163,7 +169,10 @@
     <home-screen 
     v-else-if="page == 1"
     v-bind:username="loginusername"
-    v-on:item-added="addItem">
+    v-bind:items="items"
+    v-on:item-added="addItem"
+    v-on:show-items="showItems"
+    v-on:remove-item = "removeItem">
     </home-screen>
     <error-screen 
     v-else>
@@ -230,18 +239,20 @@
     });
 
     Vue.component('home-screen', {
-      props: [ 'username' ],
+      props: [ 'username', 'items' ],
       data() {
         return {
           item2: undefined,
           color: undefined,
+          itemremove:undefined,
+          colorremove:undefined,
           errorMessage: "",
         }
       },
       template: `
             <div>
-            <h2>Welcome, {{username}}, to your personal digital closet.</h2>
-            <h2>Add a new piece of clothing below.</h2>
+              <h2>Welcome, {{username}}, to your personal digital closet.</h2>
+              <h2>Add a new piece of clothing below.</h2>
                             <input list="clothings" name="cloth" v-model="item2"></input>
                             <datalist id="clothings">
                             <option value="Pants"></option>
@@ -264,7 +275,12 @@
                           </datalist>
                           <input type="submit" v-on:click="additem" ></input>
                           <br><div> {{this.errorMessage}}</div>
-              </div>`,
+                <div v-for="item in items">
+                  {{ item[0] }} {{item[1]}} <button class = "nrmbtn" 
+                  v-on:click="removeitems(1, 1)"></button>
+             
+                </div>
+            </div>`,
       methods: {
         additem() {
           if (!this.item2) {
@@ -277,7 +293,16 @@
             return;
           }        
           this.$emit('item-added', this.item2, this.color);
+        },
+        showitems() {    
+          this.$emit('show-items');
+        },
+        removeitems(item, color) {    
+          this.$emit('remove-item', item, color);
         }
+      },
+      beforeMount(){
+        this.$emit('show-items');
       }
     });
 
@@ -307,24 +332,44 @@
       el: '#app',
       data: {
         page: 0,
-        loginusername: undefined 
+        loginusername: undefined,
+        items: []
       },
       methods: {
         async addItem(item1, color1) {
           console.log(item1);
           console.log(color1);
-
+          const user = this.loginusername;
           const response = await fetch('api/additem', {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({item: item1, color: color1 })
+            body: JSON.stringify({item: item1, color: color1, owner: user})
           });
           const res = await response.json(); 
-          console.log("gfds");        
-
+          console.log("Item added succesfully");
+          this.showItems();
+        },
+        async showItems() {
+          const user = this.loginusername;
+          const response = await fetch('api/displayitem', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({owner: user})
+          });
+          const res = await response.json(); 
+          this.items = [];
+          for (i = 0; i < res.length; i++) {
+              var item = [];
+              item.push(res[i].values[0].adapted.properties.type.val);
+              item.push(res[i].values[0].adapted.properties.color.val);
+              this.items.push(item);
+            }
         },
         async loginClicked(userName, passWord) {
           const response = await fetch('api/login', {
@@ -344,8 +389,21 @@
             this.loginusername = passwordCheck.username;
           }
 
-        }
-
+        },
+        async removeItem(item, color) {
+          console.log("reached remove item");
+          console.log(item);
+          const response = await fetch('api/removeitem', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ item: item, color: color})
+          });
+          const res = await response.json(); 
+          this.showItems();
+        },
       }
     });
   </script> 
