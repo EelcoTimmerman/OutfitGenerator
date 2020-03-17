@@ -23,13 +23,12 @@ public class itemAdder {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response receiveItem(@Context HttpServletRequest request, ItemData itemData) throws Exception {
+	public Response addItem(@Context HttpServletRequest request, ItemData itemData) throws Exception {
         String i=itemData.getItem();
         String c=itemData.getColor();
+        String o=itemData.getOwner();
         try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
-            //db.addItem(i, c);
-            //db.printGreeting("joo");
-        	db.addPerson(i,c);
+        	db.addItem(i,c,o);
         }
 		
 		JSONObject output = new JSONObject();

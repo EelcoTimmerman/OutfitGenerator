@@ -3,6 +3,7 @@ package outfitGenerator;
 public class ItemData {
 	private String color;
 	private String item;
+	private String owner;
 
 
 	public String getItem() {
@@ -13,4 +14,7 @@ public class ItemData {
 		return color;
 	}
 
+	public String getOwner() {
+		return owner;
+	}
 }
