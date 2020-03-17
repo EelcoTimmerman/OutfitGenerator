@@ -28,7 +28,8 @@ public class itemAdder {
         String c=itemData.getColor();
         try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
             //db.addItem(i, c);
-            db.printGreeting("joo");
+            //db.printGreeting("joo");
+        	db.addPerson(i,c);
         }
 		
 		JSONObject output = new JSONObject();

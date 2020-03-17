@@ -8,6 +8,9 @@ import org.neo4j.driver.Transaction;
 import org.neo4j.driver.TransactionWork;
 import static org.neo4j.driver.Values.parameters;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class DBconnector implements AutoCloseable{
     private final Driver driver;
@@ -45,7 +48,7 @@ public class DBconnector implements AutoCloseable{
         	String Clothing = session.writeTransaction( new TransactionWork<String>(){
                     @Override
                     public String execute( Transaction tx ){
-                    	Result result = tx.run( "CREATE (Dhawan:player{name:'theName' , YOB: 1990})");
+                    	Result result = tx.run( "CREATE (Dhawan:player{name:'theName' , YOB: 1990})");                   	
                         return result.single().get( 0 ).asString();
                     }
             } );
@@ -53,6 +56,30 @@ public class DBconnector implements AutoCloseable{
 
     }
     
+
+    public void addPerson(String name, String color){
+        // Sessions are lightweight and disposable connection wrappers.
+        try (Session session = driver.session()){
+        	//session.writeTransaction(tx -> tx.run("MERGE (a:Person {name: $x})", parameters("x", name)));
+            // Wrapping a Cypher Query in a Managed Transaction provides atomicity
+            // and makes handling errors much easier.
+            // Use `session.writeTransaction` for writes and `session.readTransaction` for reading data.
+            // These methods are also able to handle connection problems and transient errors using an automatic retry mechanism.
+        	//session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $x})", parameters("x", name)));
+        	session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $x, color:$c})",
+        			parameters("x", name, "c", color )));
+
+        
+        }
+    }
+    
+    public void deleteEntireCloset() {
+        try (Session session = driver.session()){
+            session.writeTransaction(tx -> tx.run("DELETE (n:ClothingPiece {type: $x})"));          
+   
+        }
+    }
+
     
 
 
