@@ -41,12 +41,16 @@
       padding: 10px 18px;
       background-color: #f44336;
     }
+#buttoncontainer{
+  display: inline-block;
+}
 
-    .nrmbtn {
-      width: auto;
-      padding: 10px 18px;
-      background-color: #330d7a;
-    }
+.nrmbtn {
+  width: auto;
+  font-size: 10px;
+  border-radius: 50%;
+  background-color: rgb(192, 26, 26);
+}
 
     /* Center the image and position the close button */
     .imgcontainer {
@@ -63,6 +67,11 @@
     .container {
       padding: 16px;
     }
+#demobox {
+  background-color: #cfc ;
+  padding: 10px ;
+  border: 1px solid green ;
+}
 
     span.psw {
       float: right;
@@ -155,6 +164,56 @@
         width: 100%;
       }
     }
+
+
+.createOutfit {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 50px;
+  background: rgb(194, 25, 123);
+  border-radius: 999px;
+}
+
+.acceptAndNewButton {
+  position: relative;
+  display: inline-block;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 50px;
+  background: rgb(50, 197, 185);
+  border-radius: 999px;
+}
+
+
+.fds:hover {
+    box-shadow: 0 0 20px 10px rgba(230, 30, 10, 0.6);
+    animation: burn 1000ms ease-out forwards;
+}
+
+@keyframes burn {
+  0% {
+    color: rgba(255, 130, 110, 1);
+    background: rgba(255, 230, 110, 1);
+    box-shadow:
+      0 0 5px 0 rgba(200, 0, 10, 1),
+      0 0 5px 0 rgba(230, 30, 10, 0.8),
+      0 0 5px 0 rgba(230, 230, 10, 0.6);
+  }
+  
+  100% {
+    color: rgba(0, 0, 0, 1);
+    background: rgba(255, 255, 255, 1);
+    box-shadow:
+      0 -35px 40px 30px rgba(255, 130, 10, 0),
+      0 -30px 30px 10px rgba(230, 30, 10, 0),
+      0 -20px 10px 0 rgba(255, 255, 10, 0);
+  }
+}
+    
   </style>
 </head>
 
@@ -169,10 +228,13 @@
     <home-screen 
     v-else-if="page == 1"
     v-bind:username="loginusername"
-    v-bind:items="items"
+    v-bind:cleanitems="cleanitems"
+    v-bind:dirtyitems="dirtyitems"
+    v-bind:outfitpieces="outfit"
     v-on:item-added="addItem"
     v-on:show-items="showItems"
-    v-on:remove-item = "removeItem">
+    v-on:remove-item = "removeItem"
+    v-on:create-outfit = "createOutfit">
     </home-screen>
     <error-screen 
     v-else>
@@ -239,7 +301,7 @@
     });
 
     Vue.component('home-screen', {
-      props: [ 'username', 'items' ],
+      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces' ],
       data() {
         return {
           item2: undefined,
@@ -252,7 +314,7 @@
       template: `
             <div>
               <h2>Welcome, {{username}}, to your personal digital closet.</h2>
-              <h2>Add a new piece of clothing below.</h2>
+              <span>Add a new piece of clothing below.</span><br>
                             <input list="clothings" name="cloth" v-model="item2"></input>
                             <datalist id="clothings">
                             <option value="Pants"></option>
@@ -275,11 +337,52 @@
                           </datalist>
                           <input type="submit" v-on:click="additem" ></input>
                           <br><div> {{this.errorMessage}}</div>
-                <div v-for="item in items">
-                  {{ item[0] }} {{item[1]}} <button class = "nrmbtn" 
-                  v-on:click="removeitems(1, 1)"></button>
-             
-                </div>
+                          
+                          <div style="float:left;">
+                            <ul> These are your available items.<br>
+                            <div v-for="(item, index) in cleanitems">
+                              {{ item[0] }} {{item[1]}} 
+                              <button class = "nrmbtn" @click="deleterow(index)"
+                              v-on:click="removeitems(item)">delete
+                              </button>            
+                            </div>
+                            </ul>
+                          </div>
+
+                          <div style="float:right;">
+                            <ul> This is your laundry basket. <br>
+                            <div v-for="(item, index) in dirtyitems">
+                              {{ item[0] }} {{item[1]}} 
+                              <button class = "nrmbtn" @click="deleterow(index)"
+                              v-on:click="removeitems(item)">delete
+                              </button>            
+                            </div>
+                            </ul>
+                          </div>
+                                     
+          <div id = "demobox" style="clear:both">
+            <div v-if="outfitpieces.length == 0">
+              <span >What is the purpose of your outfit?</span>
+              <div>
+              <select>
+                <option>Please select your motivation for wearing clothes today.</option>
+                <option>Bussiness</option>
+                <option>Recreational</option>
+                <option>I go to the beach</option>
+                <option>I just need clothes</option>
+              </select>
+              <button class = "createOutfit" v-on:click="createoutfit">Create outfit </button> 
+              </div>
+            </div>
+            <div v-if="outfitpieces.length > 1"> We have selected an excellent outfit for you!
+              <div v-for="piece in outfitpieces"> {{ piece[0] }} {{ piece[1] }}<br></div>
+              <div id="buttoncontainer">
+                <button class = "acceptAndNewButton" >Accept outfit </button> 
+                <button class = "acceptAndNewButton" >Generate new outfit </button>
+              </div>
+            </div>
+          </div>
+
             </div>`,
       methods: {
         additem() {
@@ -291,14 +394,24 @@
           if (!this.color) {
             this.errorMessage = "Specify your color, please...";
             return;
-          }        
+          }
+          this.errorMessage = "Item added succesfully, we are happy to see that your closet is ever growing."      
           this.$emit('item-added', this.item2, this.color);
         },
         showitems() {    
+          this.errorMessage = ""  
           this.$emit('show-items');
         },
         removeitems(item, color) {    
           this.$emit('remove-item', item, color);
+        },
+        createoutfit(){
+          this.errorMessage = ""  
+          this.$emit('create-outfit');
+        },
+        deleterow(index){
+          this.errorMessage = ""  
+         this.items.splice(index,1);
         }
       },
       beforeMount(){
@@ -333,7 +446,9 @@
       data: {
         page: 0,
         loginusername: undefined,
-        items: []
+        cleanitems: [],
+        dirtyitems: [],
+        outfit: []
       },
       methods: {
         async addItem(item1, color1) {
@@ -363,12 +478,20 @@
             body: JSON.stringify({owner: user})
           });
           const res = await response.json(); 
-          this.items = [];
+          this.cleanitems = [];
+          this.dirtyitems = [];
           for (i = 0; i < res.length; i++) {
               var item = [];
-              item.push(res[i].values[0].adapted.properties.type.val);
-              item.push(res[i].values[0].adapted.properties.color.val);
-              this.items.push(item);
+              if(res[i].values[0].adapted.properties.state.val == "dirty"){
+                item.push(res[i].values[0].adapted.properties.type.val);
+                item.push(res[i].values[0].adapted.properties.color.val);
+                this.dirtyitems.push(item);
+              }else{
+                item.push(res[i].values[0].adapted.properties.type.val);
+                item.push(res[i].values[0].adapted.properties.color.val);
+                this.cleanitems.push(item);
+              }
+
             }
         },
         async loginClicked(userName, passWord) {
@@ -390,20 +513,49 @@
           }
 
         },
-        async removeItem(item, color) {
-          console.log("reached remove item");
-          console.log(item);
+        async removeItem(item) {
+          const user = this.loginusername;
           const response = await fetch('api/removeitem', {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ item: item, color: color})
+            body: JSON.stringify({item: item[0], color: item[1], owner: user})
           });
           const res = await response.json(); 
-          this.showItems();
+          // console.log(res.owner);
+          // console.log(res.type);
+          // console.log(res.color);
         },
+        async createOutfit() {
+          const user = this.loginusername;
+          const response = await fetch('api/createoutfit', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({owner: user})
+          });
+          const res = await response.json();
+          this.outfit = [];
+          if(res.length > 1){
+            for (i = 0; i < res.length; i++) {
+              var item = [];
+              item.push(res[i].values[0].adapted.properties.type.val);
+              item.push(res[i].values[0].adapted.properties.color.val);
+              this.outfit.push(item);
+            }
+          }else{
+            var item = [];
+              item.push("Common..  ");
+              item.push(res.message);
+            this.outfit.push(item);
+            console.log(res.message);
+          }
+
+        }
       }
     });
   </script> 
