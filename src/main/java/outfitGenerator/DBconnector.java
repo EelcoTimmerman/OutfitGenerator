@@ -1,5 +1,4 @@
 package outfitGenerator;
-import org.json.simple.JSONObject;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -10,11 +9,8 @@ import org.neo4j.driver.Transaction;
 import org.neo4j.driver.TransactionWork;
 import static org.neo4j.driver.Values.parameters;
 import com.google.gson.*;
-
-
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
 
 
 public class DBconnector implements AutoCloseable{
@@ -48,15 +44,9 @@ public class DBconnector implements AutoCloseable{
     
 
     public void addItem(String type, String color, String owner){
-        // Sessions are lightweight and disposable connection wrappers.
         try (Session session = driver.session()){
-        	//session.writeTransaction(tx -> tx.run("MERGE (a:Person {name: $x})", parameters("x", name)));
-            // Wrapping a Cypher Query in a Managed Transaction provides atomicity
-            // and makes handling errors much easier.
-            // Use `session.writeTransaction` for writes and `session.readTransaction` for reading data.
-            // These methods are also able to handle connection problems and transient errors using an automatic retry mechanism.
         	//session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $x})", parameters("x", name)));
-        	session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $t, color:$c, owner: $o})",
+        	session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $t, color:$c, owner: $o, state: 'clean'})",
         			parameters("t", type, "c", color, "o", owner)));       
         }
     }
@@ -65,31 +55,32 @@ public class DBconnector implements AutoCloseable{
 		ArrayList<Record> items = new ArrayList<>();
 		String newItem = null;
     	try (Session session = driver.session()){
-            // A Managed Transaction transactions are a quick and easy way to wrap a Cypher Query.
-            // The `session.run` method will run the specified Query.
-            // This simpler method does not use any automatic retry mechanism.
             Result result = session.run("MATCH (n:ClothingPiece { owner: $o }) RETURN n",
             		parameters("o", owner));
             Gson gson = new Gson();
-//            Record record = result.next();
-//            newItem = gson.toJson(record);
-            
             while (result.hasNext()){
                 Record record = result.next();
         		items.add(record);         
-
-                
-                // Values can be extracted from a record by index or name.
-                //System.out.println(record.get("name").asString());
             }
-             newItem = gson.toJson(items);
-
-            
+             newItem = gson.toJson(items);          
         }
 		return newItem;
     }
 
+    public void removeItem(String owner, String item, String color) {
+    	try (Session session = driver.session()){
+            session.run("MATCH (n:ClothingPiece { owner: $o, type: $t, color: $c }) DELETE n",
+            		parameters("o", owner, "t", item, "c", color));
+    	}
+    }
     
+    public Record getItem(String owner, String item) {
+    	try (Session session = driver.session()){
+    		Result result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t}) RETURN n",
+            		parameters("o", owner, "t", item));
+    		return (Record) result.next();
+    	}
+    }
 
 
 }
