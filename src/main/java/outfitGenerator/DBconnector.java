@@ -74,11 +74,36 @@ public class DBconnector implements AutoCloseable{
     	}
     }
     
-    public Record getItem(String owner, String item) {
+    public Record proposeItem(String owner, String item) {
     	try (Session session = driver.session()){
-    		Result result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t}) RETURN n",
-            		parameters("o", owner, "t", item));
+    		Result result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t, state: 'clean'})"
+    				+ "SET n.state = 'proposed' RETURN n", parameters("o", owner, "t", item));
     		return (Record) result.next();
+    	}
+    }
+    
+    public void setProposedClean(String owner) {
+    	try (Session session = driver.session()){
+            session.run("MATCH (n:ClothingPiece { owner: $o, state: 'proposed'})"
+            		+ " SET  n.state = 'clean'", parameters("o", owner));
+    	}catch(Exception e){
+    		
+    	}
+    }
+    
+    public void doLaundry(String owner) {
+    	try (Session session = driver.session()){
+            session.run("MATCH (n:ClothingPiece { owner: $o, state: 'dirty'})"
+            		+ " SET  n.state = 'clean'", parameters("o", owner));
+            session.run("MATCH (n:ClothingPiece { owner: $o, state: 'proposed'})"
+            		+ " SET  n.state = 'clean'", parameters("o", owner));
+    	}
+    }
+    
+    public void moveItemsToBasket(String owner) {
+    	try (Session session = driver.session()){
+    		session.run("MATCH (n:ClothingPiece { owner: $o, state: 'proposed'})"
+    				+ "SET n.state = 'dirty' RETURN n" , parameters("o", owner));
     	}
     }
 
