@@ -64,35 +64,54 @@
 <body>
 <div id="app1">
   <signin-screen
-    v-if="page == 0">
+    v-if="page == 0"
+    v-on:create-user = "createUser">
   </signin-screen>
 </div>
 <script>
     Vue.component('signin-screen', {
-      template: 
-      `<div>
+      data() {
+        return {
+          username: undefined,
+          password: undefined,
+          passwordr: undefined,
+          country: undefined,
+          state: undefined,
+          city: undefined,
+          passmessage:undefined
+        }
+      },
+      template: `
+      <div >
         <h2>Signup Form</h2> 
-        <form action="/login.html" style="border:1px solid #ccc"> 
+        <div  style="border:1px solid #ccc"> 
             <div class="container"> 
-                <label><b>Email</b></label> 
-                <input type="text" placeholder="Enter Email" name="email" required> 
-      
-                <label><b>Password</b></label> 
-                <input type="password" placeholder="Enter Password" name="psw" required> 
-      
-                <label><b>Repeat Password</b></label> 
-                <input type="password" placeholder="Repeat Password" name="psw-repeat" required> 
+                <input type="text" placeholder="Enter username" v-model="username" required>  
+                <input type="password" placeholder="Enter Password" v-model="password" required>       
+                <input type="password" placeholder="Repeat Password" v-model="passwordr" required> 
+                <span>{{passmessage}}</span>
                 <input type="checkbox" checked="checked"> Remember me 
                 <p>To create an account you have to agree our <a href="#">Terms & Privacy</a>.</p> 
       
                 <div class="clearfix"> 
                     <button type="button" class="cancelbtn">Cancel</button> 
-                    <button type="submit" class="signupbtn">Sign Up</button> 
+                    <button type="submit" class="signupbtn" v-on:click="checkPassword">Sign Up</button> 
                 </div> 
             </div> 
-        </form> 
+        </div> 
+      </div>`,
+      methods: {
+        checkPassword() {
+          if( this.password===this.passwordr ){
+            this.$emit('create-user');
+          }else{
+            console.log("idiot");
+            passmessage = "Passwords are not equal";
+            return;
+          }         
+        }
+      }
 
-      </div>`
     });
 
     var app = new Vue({
@@ -101,10 +120,11 @@
         page: 0
       },
       methods: {
-        async doLaundry() {
-          console.log("doing laundry");
+        async createUser() {
+          console.log("Creating user.");
         }
       }
+      
 
     });
 
