@@ -25,7 +25,7 @@ public class Weather {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response  getWeather(@Context HttpServletRequest request, ItemData weather) throws ServletException, IOException {
 	    String owmApiKey = "ba1623a2a70847dd9879a79a7b16cd4e"; 
-	    String city = "Utrecht, Nl";//weather.getOwner();
+	    String city = "Utrecht, Nl";//weather.getOwner();e
 	    OpenWeatherMap.Units units = OpenWeatherMap.Units.METRIC;
 	    OpenWeatherMap owm = new OpenWeatherMap(units, owmApiKey);
 	    float temp = -1;
