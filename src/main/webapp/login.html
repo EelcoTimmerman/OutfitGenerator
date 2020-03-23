@@ -486,7 +486,7 @@
         }
       },
       template: `
-                    <div>Wrong password: </div>
+                    <div>Are you trying to hack inside my outfit generator? It's not so easy, you fool.</div>
                 `,
       methods: {
 
@@ -556,13 +556,14 @@
             },
             body: JSON.stringify({ username: userName, password: passWord })
           });
-          const passwordCheck = await response.json(); 
-          console.log("Anja has corona.");        
-          if (passwordCheck.username == "false") {
+          const res = await response.json(); 
+          console.log("Anja has corona.");
+          console.log(res);               
+          if (res.check == "false") {
             this.page = 2;
           } else {
             this.page = 1;
-            this.loginusername = passwordCheck.username;
+            this.loginusername = res.username;
           }
 
         },

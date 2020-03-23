@@ -103,7 +103,7 @@
       methods: {
         checkPassword() {
           if( this.password===this.passwordr ){
-            this.$emit('create-user');
+            this.$emit('create-user', this.username, this.password, "Utrecht");
           }else{
             console.log("idiot");
             passmessage = "Passwords are not equal";
@@ -120,8 +120,18 @@
         page: 0
       },
       methods: {
-        async createUser() {
+        async createUser(username, password, city) {
           console.log("Creating user.");
+          const response = await fetch('api/createuser', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({username: username, password: password, city:city})
+          });
+          const res = await response.json();
+          console.log(res);
         }
       }
       
