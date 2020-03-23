@@ -210,7 +210,7 @@
 }
 
 
-.fds:hover {
+.acceptAndNewButton:hover {
     box-shadow: 0 0 20px 10px rgba(230, 30, 10, 0.6);
     animation: burn 1000ms ease-out forwards;
 }
@@ -253,6 +253,8 @@
     v-bind:dirtyitems="dirtyitems"
     v-bind:outfitpieces="outfit"
     v-bind:weatherdata="weatherdata"
+    v-bind:componentkey="refreshkey"
+    v-on:do-refresh="refresh"
     v-on:item-added="addItem"
     v-on:show-items="showItems"
     v-on:remove-item = "removeItem"
@@ -325,7 +327,7 @@
     });
 
     Vue.component('home-screen', {
-      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata'],
+      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata', 'componentkey'],
       data() {
         return {
           item2: undefined,
@@ -335,7 +337,8 @@
           errorMessage: ""
         }
       },
-      template: `
+      template:
+       `
             <div>
               <h2>Welcome, {{username}}, to your personal digital closet.</h2>
               <span>Add a new piece of clothing below.</span><br>
@@ -399,14 +402,20 @@
               </select>
               <br>
               <span >Do you want to take the weather into account?</span>
-              <div v-if="weatherdata[1] != -1">
+              <div v-if="weatherdata[1] != -1 && componentkey > -1">
                 <span>Today's temperature: {{weatherdata[0]}} </span><br>
                 <span>Percentage of clouds: {{weatherdata[1]}}</span><br>
                 <span>Milimeters of rain: {{weatherdata[2]}}</span><br>
+                <button v-on:click="excludeweather">Exclude weather data</button>
               </div>
-              <button v-on:click="getweather">Include weather data data</button>
+              <div v-if="weatherdata[1] == -1 && componentkey > -1">
+                <button v-on:click="getweather">Include weather data</button>
+              </div>
               <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button> 
               </div>
+            </div>
+            <div>
+              {{componentkey}}
             </div>
             <div v-if="outfitpieces.length == 1">
               <div v-for="piece in outfitpieces"> {{ piece[0] }} {{ piece[1] }}<br>
@@ -455,7 +464,7 @@
           this.$emit('accept-outfit');
         },
         deleterowC(index){
-          this.errorMessage = ""  
+          this.errorMessage = "";
           this.cleanitems.splice(index,1);
         },
         deleterowD( index){
@@ -466,12 +475,16 @@
           this.outfitpieces = [];
         },
         dolaundry(){
-          this.errorMessage = ""
+          this.errorMessage = "";
           this.$emit('do-laundry');
         },
         getweather(){
-          this.errorMessage = ""
+          this.weatherdata[1]= 1;
           this.$emit('get-weather');
+        },
+        excludeweather(){
+          this.weatherdata[1]= -1;
+          this.$emit('do-refresh');
         }
       },
       beforeMount(){
@@ -501,9 +514,14 @@
         cleanitems: [],
         dirtyitems: [],
         outfit: [],
-        weatherdata: [-1,-1,-1]
+        weatherdata: [-1,-1,-1],
+        refreshkey: 0
       },
       methods: {
+        async refresh() {
+          this.refreshkey += 1;
+          console.log(this.refreshkey);
+        },
         async addItem(item1, color1) {
           console.log(item1);
           console.log(color1);
@@ -644,6 +662,7 @@
         async getWeather() {
           console.log("Retrieving weather information.");
           const user = this.loginusername;
+          this.refreshkey += 1;
           const response = await fetch('api/weather', {
             method: 'POST',
             headers: {
