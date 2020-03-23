@@ -23,15 +23,24 @@ public class LoginServlet{
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response doPost(@Context HttpServletRequest request, LoginData login) throws ServletException, IOException {  
+	public Response doPost(@Context HttpServletRequest request, LoginData login) throws ServletException, Exception {  
         String name=login.getUsername();
         String password=login.getPassword();  
-
-
 		JSONObject output = new JSONObject();
-		output.put("username", name);         
-		String stringoutput = output.toJSONString();
 
+        try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
+    		if(db.checkPassword(name, password)) {
+            	output.put("message", "Password correct.");
+            	output.put("check", "true");
+            	output.put("username", name);
+
+    		}else {
+            	output.put("message", "No matching data with current username and password");
+            	output.put("check", "false");
+
+    		}
+        }
+		String stringoutput = output.toJSONString();
         return Response.status(200).entity(stringoutput).build();
     }  
 }

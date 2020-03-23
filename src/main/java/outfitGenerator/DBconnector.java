@@ -107,5 +107,29 @@ public class DBconnector implements AutoCloseable{
     	}
     }
 
-
+    public boolean getUser(String user) {
+    	try (Session session = driver.session()){
+    		Result r = session.run("MATCH (n:User{username: $u}) RETURN n", parameters("u", user)); 
+    		if(r.hasNext()) { return true;}
+    	}
+    	return false;
+    }
+    
+    public boolean checkPassword(String user, String password) {
+    	try (Session session = driver.session()){
+    		Result r = session.run("MATCH (n:User{username: $u, password: $p}) RETURN n"
+    				, parameters("u", user,"p", password)); 
+    		if(r.hasNext()) { return true;}
+    	}
+    	return false;
+    }
+    
+    public void createUser(String user, String password, String city) {
+    	try (Session session = driver.session()){
+        	session.writeTransaction(tx -> tx.run("CREATE (n:User {username: $u, password: $p, city: $c})",
+        			parameters("u", user, "p", password, "c", city))); 
+    	}
+    }
+    
+    
 }

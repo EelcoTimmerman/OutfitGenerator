@@ -29,12 +29,10 @@ public class itemAdder {
         String o=itemData.getOwner();
         try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
         	db.addItem(i,c,o);
-        }
-		
+        }		
 		JSONObject output = new JSONObject();
 		output.put("color", c);         
-		String stringoutput = output.toJSONString();
-		
+		String stringoutput = output.toJSONString();		
 		return Response.status(200).entity(stringoutput).build();
 	}
 
