@@ -197,6 +197,10 @@
   background: rgb(194, 25, 123);
   border-radius: 999px;
 }
+.createOutfit:hover {
+    box-shadow: 0 0 20px 10px rgba(230, 30, 10, 0.6);
+    animation: burn 1000ms ease-out forwards;
+}
 
 .acceptAndNewButton {
   position: relative;
@@ -254,6 +258,11 @@
     v-bind:outfitpieces="outfit"
     v-bind:weatherdata="weatherdata"
     v-bind:componentkey="refreshkey"
+    v-bind:city="city"
+    v-bind:outfitmessage="outfitmessage"
+    v-bind:weathermessage="weathermessage"
+    v-on:reset-outfit="resetOutfit"
+    v-on:advanced-settings="advancedSettings"
     v-on:do-refresh="refresh"
     v-on:item-added="addItem"
     v-on:show-items="showItems"
@@ -327,7 +336,8 @@
     });
 
     Vue.component('home-screen', {
-      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata', 'componentkey'],
+      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata', 'componentkey', 'city',
+      'outfitmessage', 'weathermessage'],
       data() {
         return {
           item2: undefined,
@@ -402,30 +412,37 @@
                 <option>I just need clothes</option>
               </select>
               <br>
-              <span >Do you want to take the weather into account?</span>
               <div v-if=" weatherdata[1] > -1 && componentkey>-1">
-                <span>Today's temperature: {{weatherdata[0]}} </span><br>
+                <span>Today's weather in: {{city}} </span><br>
+                <span>Temperature: {{weatherdata[0]}} </span><br>
                 <span>Percentage of clouds: {{weatherdata[1]}}</span><br>
                 <span>Milimeters of rain: {{weatherdata[2]}}</span><br>
                 <button v-on:click="excludeweather">Exclude weather data</button>
               </div>
               <div v-if="weatherdata[1] == -1 && componentkey>-1">
+                <span >Do you want to take the weather into account?</span>
                 <button v-on:click="getweather">Include weather data</button>
               </div>
+              <span >Do you want to customize your outfit even further?</span>
+              <button v-on:click="advancedsettings">Advanced settings</button>
               <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button> 
               </div>
             </div>
+
             <div v-if="outfitpieces.length == 1">
               <div v-for="piece in outfitpieces"> {{ piece[0] }} {{ piece[1] }}<br>
-              <button class = "createOutfit" v-on:click="returntocreateoutfit">Try again.</button>
+              <button class = "createOutfit" v-on:click="resetoutfit">Try again.</button>
             </div>
+
             </div>
-            <div v-if="outfitpieces.length > 1"> We have selected an excellent outfit for you!
+            <div v-if="outfitpieces.length > 1">
+              <span>{{outfitmessage}}<br></span>
+              <span v-if="weatherdata[1] > -1">{{weathermessage}}</span><br>
               <div v-for="piece in outfitpieces"> {{ piece[0] }} {{ piece[1] }}<br></div>
               <div id="buttoncontainer">
                 <button class = "acceptAndNewButton" v-on:click="acceptoutfit">
                 Accept outfit </button> 
-                <button class = "acceptAndNewButton" v-on:click="returntocreateoutfit">
+                <button class = "acceptAndNewButton" v-on:click="resetoutfit">
                 Again </button>
               </div>
             </div>
@@ -446,6 +463,9 @@
           this.errorMessage = "Item added succesfully, we are happy to see that your closet is ever growing."      
           this.$emit('item-added', this.item2, this.color);
         },
+        advancedsettings() {    
+          this.$emit('advanced-settings');
+        },
         showitems() {    
           this.errorMessage = ""  
           this.$emit('show-items');
@@ -458,7 +478,8 @@
           this.$emit('create-outfit');
         },
         acceptoutfit(){
-          this.errorMessage = ""  
+          this.errorMessage = "";
+          this.outfitpieces = [];
           this.$emit('accept-outfit');
         },
         deleterowC(index){
@@ -469,8 +490,8 @@
           this.errorMessage = ""  
           this.dirtyitems.splice(index,1);
         },
-        returntocreateoutfit(){
-          this.outfitpieces = [];
+        resetoutfit(){
+          this.$emit('reset-outfit');
         },
         dolaundry(){
           this.errorMessage = "";
@@ -510,10 +531,13 @@
       data: {
         page: 0,
         loginusername: undefined,
+        city: undefined,
         cleanitems: [],
         dirtyitems: [],
         outfit: [],
         weatherdata: [-1,-1,-1],
+        outfitmessage: "",
+        weathermessage:"",
         refreshkey: 0
       },
       methods: {
@@ -537,6 +561,7 @@
           });
           const res = await response.json(); 
           console.log("Item added succesfully");
+          console.log(this.outfitpieces);
           this.showItems();
         },
         async showItems() {
@@ -564,7 +589,7 @@
                 this.cleanitems.push(item);
               }
 
-            }
+          }
         },
         async loginClicked(userName, passWord) {
           const response = await fetch('api/login', {
@@ -582,6 +607,8 @@
           } else {
             this.page = 1;
             this.loginusername = res.username;
+            console.log("City obtained from login: "+res.city);
+            this.city = res.city;
           }
 
         },
@@ -596,9 +623,13 @@
             body: JSON.stringify({item: item[0], color: item[1], owner: user})
           });
           const res = await response.json(); 
-          // console.log(res.owner);
-          // console.log(res.type);
-          // console.log(res.color);
+        },
+        resetOutfit() {
+          this.outfit = [];        
+          this.$nextTick(function () {
+            this.outfit = [];        
+          })
+          console.log(this.outfit);
         },
         async proposeOutfit() {
           console.log("outfit proposed")
@@ -613,18 +644,21 @@
           });
           const res = await response.json();
           this.outfit = [];
-          if(res.length > 1){
-            for (i = 0; i < res.length; i++) {
+          console.log(res);
+          if(res.message === "OK"){
+            this.outfitmessage = res.outfitmessage;
+            for (i = 0; i < res.items.length; i++) {
               var item = [];
-              item.push(res[i].values[0].adapted.properties.type.val);
-              item.push(res[i].values[0].adapted.properties.color.val);
+              item.push(res.items[i][0]);
+              item.push(res.items[i][1]);
               this.outfit.push(item);
             }
             this.showItems();
           }else{
+            console.log("mess not OK:")
             var item = [];
-              item.push("Common..  ");
-              item.push(res.message);
+            item.push("Common..  ");
+            item.push(res.message);
             this.outfit.push(item);
             console.log(res.message);
           }
@@ -641,8 +675,11 @@
             body: JSON.stringify({owner: user})
           });
           const res = await response.json();
-          console.log(res);
+          this.resetOutfit();
           this.showItems();
+        },
+        async advancedSettings() {
+          console.log("Advanced settings");
         },
         async doLaundry() {
           console.log("doing laundry");
@@ -662,6 +699,7 @@
         async getWeather() {
           console.log("Retrieving weather information.");
           const user = this.loginusername;
+          const city = this.city;
           this.refreshkey += 1;
           const response = await fetch('api/weather', {
             method: 'POST',
@@ -669,12 +707,14 @@
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({owner: user})
+            body: JSON.stringify({owner: user, item:city})
           });
           const res = await response.json();
+          console.log(res);
           this.weatherdata[0] = res.temp;
           this.weatherdata[1] = res.clouds;
           this.weatherdata[2] = res.rain;
+          this.weathermessage = res.weathermessage;
           this.refresh();
         }
       }
