@@ -7,6 +7,8 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Transaction;
 import org.neo4j.driver.TransactionWork;
+import org.neo4j.driver.Value;
+
 import static org.neo4j.driver.Values.parameters;
 import com.google.gson.*;
 import java.util.ArrayList;
@@ -66,6 +68,18 @@ public class DBconnector implements AutoCloseable{
         }
 		return newItem;
     }
+    
+    public String getCity(String owner) {
+		String newItem;
+    	try (Session session = driver.session()){
+            Result result = session.run("MATCH (n:User { username: $o }) RETURN n.city",
+            		parameters("o", owner));
+            Gson gson = new Gson();
+            Record record = result.next();
+            newItem = gson.toJson(record);          
+        }
+		return newItem;
+    }
 
     public void removeItem(String owner, String item, String color) {
     	try (Session session = driver.session()){
@@ -74,12 +88,16 @@ public class DBconnector implements AutoCloseable{
     	}
     }
     
-    public Record proposeItem(String owner, String item) {
+    public String proposeItem(String owner, String item) {
+    	String finalResult = null;
     	try (Session session = driver.session()){
     		Result result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t, state: 'clean'})"
-    				+ "SET n.state = 'proposed' RETURN n", parameters("o", owner, "t", item));
-    		return (Record) result.next();
+    				+ "SET n.state = 'proposed' RETURN n.color LIMIT 1", parameters("o", owner, "t", item));
+    		finalResult = result.next().get("n.color").toString();
+    		finalResult = finalResult.substring(1, finalResult.length()-1);
+    		return finalResult;
     	}
+
     }
     
     public void setProposedClean(String owner) {
@@ -128,6 +146,13 @@ public class DBconnector implements AutoCloseable{
     	try (Session session = driver.session()){
         	session.writeTransaction(tx -> tx.run("CREATE (n:User {username: $u, password: $p, city: $c})",
         			parameters("u", user, "p", password, "c", city))); 
+    	}
+    }
+    
+    public void setWeather(float temp, float clouds, float rain) {
+    	try (Session session = driver.session()){
+    		session.run("MATCH (n:Weather) SET n = { temp: $t, clouds: $w, rain: $r }",
+        			parameters("t", temp, "w", clouds, "r", rain)); 
     	}
     }
     

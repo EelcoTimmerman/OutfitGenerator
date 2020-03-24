@@ -23,24 +23,32 @@ public class CreateOutfit {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response disPlayItems(@Context HttpServletRequest request, ItemData itemData) throws Exception {
+	public Response createOutfit(@Context HttpServletRequest request, ItemData itemData) throws Exception {
 		Gson gson = new Gson();
 		String o=itemData.getOwner();
-        ArrayList<Record> items = new ArrayList<>();
+		ArrayList<String[]> items = new ArrayList<>();
+		JSONObject output = new JSONObject();
+
         try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
         	db.setProposedClean(o);
-        	items.add( db.proposeItem(o,"T-shirt") );
-        	items.add( db.proposeItem(o,"Pants") );
-        	items.add( db.proposeItem(o,"Socks") );
-        	items.add( db.proposeItem(o,"Shoes") );
+        	String[] tshirt = {"T-shirt", db.proposeItem(o,"T-shirt") };
+        	items.add(tshirt);
+        	String[] pants = {"Pants", db.proposeItem(o,"Pants") };
+        	items.add(pants);
+        	String[] socks = {"Socks", db.proposeItem(o,"Socks") };
+        	items.add(socks);
+        	String[] shoes = {"Shoes", db.proposeItem(o,"Shoes") };
+        	items.add(shoes);
         }catch(Exception e){
-    		JSONObject output = new JSONObject();
     		output.put("message", "You need more (clean) clothes to create an outfit!");         
     		String stringoutput = output.toJSONString();
         	return Response.status(200).entity(stringoutput).build();
         }
-        String finalOutfit = gson.toJson(items);
-		return Response.status(200).entity(finalOutfit).build();
+		output.put("message", "OK");
+		output.put("outfitmessage", "Roses are red, violets are blue, and because of that,"
+				+ " we selected the perfect outfit for you!");
+        output.put("items",items.toArray());
+		return Response.status(200).entity(output).build();
 	}	
 	
 }

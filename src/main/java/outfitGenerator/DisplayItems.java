@@ -19,7 +19,7 @@ public class DisplayItems {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response disPlayItems(@Context HttpServletRequest request, ItemData itemData) throws Exception {
         String o=itemData.getOwner();
-        String output = null;
+        String output;
         try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
         	output = db.getItemsFromOwner(o);
         }	
