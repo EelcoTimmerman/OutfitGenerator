@@ -334,7 +334,8 @@
           color: undefined,
           itemremove:undefined,
           colorremove:undefined,
-          errorMessage: ""
+          errorMessage: "",
+          extrakey: 0
         }
       },
       template:
@@ -402,20 +403,17 @@
               </select>
               <br>
               <span >Do you want to take the weather into account?</span>
-              <div v-if="weatherdata[1] != -1 && componentkey > -1">
+              <div v-if=" weatherdata[1] > -1 && componentkey>-1">
                 <span>Today's temperature: {{weatherdata[0]}} </span><br>
                 <span>Percentage of clouds: {{weatherdata[1]}}</span><br>
                 <span>Milimeters of rain: {{weatherdata[2]}}</span><br>
                 <button v-on:click="excludeweather">Exclude weather data</button>
               </div>
-              <div v-if="weatherdata[1] == -1 && componentkey > -1">
+              <div v-if="weatherdata[1] == -1 && componentkey>-1">
                 <button v-on:click="getweather">Include weather data</button>
               </div>
               <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button> 
               </div>
-            </div>
-            <div>
-              {{componentkey}}
             </div>
             <div v-if="outfitpieces.length == 1">
               <div v-for="piece in outfitpieces"> {{ piece[0] }} {{ piece[1] }}<br>
@@ -479,7 +477,8 @@
           this.$emit('do-laundry');
         },
         getweather(){
-          this.weatherdata[1]= 1;
+          this.refreshkey += 1;
+          this.$emit('do-refresh');
           this.$emit('get-weather');
         },
         excludeweather(){
@@ -519,8 +518,10 @@
       },
       methods: {
         async refresh() {
-          this.refreshkey += 1;
-          console.log(this.refreshkey);
+          this.refreshkey+=1;        
+          this.$nextTick(function () {
+            this.refreshkey+=1;        
+          })
         },
         async addItem(item1, color1) {
           console.log(item1);
@@ -576,7 +577,6 @@
           });
           const res = await response.json(); 
           console.log("Anja has corona.");
-          console.log(res);               
           if (res.check == "false") {
             this.page = 2;
           } else {
@@ -675,7 +675,7 @@
           this.weatherdata[0] = res.temp;
           this.weatherdata[1] = res.clouds;
           this.weatherdata[2] = res.rain;
-          console.log(res.temp);
+          this.refresh();
         }
       }
 
