@@ -268,9 +268,7 @@
     v-bind:city="city"
     v-bind:outfitmessage="outfitmessage"
     v-bind:weathermessage="weathermessage"
-    v-bind:modelcomp="showModal"
     v-on:reset-outfit="resetOutfit"
-    v-on:advanced-settings="advancedSettings"
     v-on:do-refresh="refresh"
     v-on:item-added="addItem"
     v-on:show-items="showItems"
@@ -278,14 +276,14 @@
     v-on:create-outfit = "proposeOutfit"
     v-on:accept-outfit = "acceptOutfit"
     v-on:do-laundry = "doLaundry"
-    v-on:get-weather = "getWeather">
+    v-on:get-weather = "getWeather"
+    v-on:set-preferences-modal= "setPreferences">
     </home-screen>
     <error-screen 
     v-else-if="page == 2">
     </error-screen>
     <modal
-    v-else-if="page == 3"
-    v-on:set-preferences = "setPreferences">
+    v-else-if="page == 3">
     </modal>
   </div>
 
@@ -348,7 +346,7 @@
 
     Vue.component('home-screen', {
       props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata', 'componentkey', 'city',
-      'outfitmessage', 'weathermessage', 'modelcomp'],
+      'outfitmessage', 'weathermessage'],
       data() {
         return {
           modelcompon: false,
@@ -436,8 +434,8 @@
                 <button v-on:click="getweather">Include weather data</button>
               </div>
               <span >Do you want to customize your outfit even further?</span>
-                  <button id="showModal" @click="modelcompon = true">Advanced Settings</button>
-                  <modal v-if="modelcompon" @close="modelcompon = false">
+                  <button id="showModal" @click="modelcompon = true" >Advanced Settings</button>
+                  <modal v-if="modelcompon"  @set-preferences-modal="setpreferences">
                       <h3 slot="header">Set here your personal preferences!</h3>
                   </modal>
               <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button> 
@@ -478,9 +476,6 @@
           this.errorMessage = "Item added succesfully, we are happy to see that your closet is ever growing."      
           this.$emit('item-added', this.item2, this.color);
         },
-        advancedsettings() {    
-          this.$emit('advanced-settings');
-        },
         showitems() {    
           this.errorMessage = ""  
           this.$emit('show-items');
@@ -520,6 +515,10 @@
         excludeweather(){
           this.weatherdata[1]= -1;
           this.$emit('do-refresh');
+        },
+        setpreferences(temp, prim, sec){
+          this.modelcompon = false;
+          this.$emit('set-preferences-modal', temp, prim, sec)
         }
       },
       beforeMount(){
@@ -538,7 +537,7 @@
                 `
     });
 
-    Vue.component("modal", {
+    Vue.component('modal', {
       data() {
         return {
           temperature: 20,
@@ -586,7 +585,7 @@
   
                 <div class="modal-footer">
                   <slot name="footer">
-                    <button class="modal-default-button" v-on:click="setpreferences" >
+                    <button class="modal-default-button" v-on:click="setpreferencesss" >
                       Confirm preferences
                     </button>
                   </slot>
@@ -596,9 +595,10 @@
           </div>
         `,
       methods: {
-        setpreferences(){
-          this.$emit('set-preferences', this.temperature, this.primarycolor, this.secondarycolor);
-          this.$emit('close')
+        setpreferencesss(){
+          console.log("arrived here")
+          this.$emit('set-preferences-modal', this.temperature, this.primarycolor, this.secondarycolor);
+          this.$emit('close');
         }
       }
     });
@@ -615,8 +615,7 @@
         weatherdata: [-1,-1,-1],
         outfitmessage: "",
         weathermessage:"",
-        refreshkey: 0,
-        showModal: false
+        refreshkey: 0
       },
       methods: {
         async refresh() {
@@ -756,9 +755,6 @@
           this.resetOutfit();
           this.showItems();
         },
-        async advancedSettings() {
-          console.log("Advanced settings");
-        },
         async doLaundry() {
           console.log("doing laundry");
           const user = this.loginusername;
@@ -773,6 +769,18 @@
           const res = await response.json();
           console.log(res);
           this.showItems();
+        },
+        async setPreferences(temp, prim, sec) {
+          const response = await fetch('api/preferences', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({temp: temp, item:prim, color:sec, owner:this.loginusername})
+          });
+          const res = await response.json();
+          console.log(res);
         },
         async getWeather() {
           console.log("Retrieving weather information.");
@@ -794,11 +802,6 @@
           this.weatherdata[2] = res.rain;
           this.weathermessage = res.weathermessage;
           this.refresh();
-        },
-        async setPreferences(temp, prim, sec){
-          console.log(temp);
-          console.log(prim);
-          console.log(sec);
         }
       }
 

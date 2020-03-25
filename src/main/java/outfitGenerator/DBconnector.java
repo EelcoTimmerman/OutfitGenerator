@@ -157,5 +157,16 @@ public class DBconnector implements AutoCloseable{
     	}
     }
     
+    public void setPreferences(String temp, String prim, String sec) {
+//    	try (Session session = driver.session()){
+//    		session.run(""
+//    				+ "MERGE (n:Preference) SET n = { temp: $t, clouds: $w, rain: $r }",
+//        			parameters("t", temp, "w", clouds, "r", rain)); 
+//    		
+//    		
+//    		match(m:User{username: $o}) CREATE (n:ClothingPiece{"
+//        			+ "type: $t, color:$c, owner: m.username, state: 'clean'})<-[:owns]-(m)"
+//    	}
+    }
     
 }
