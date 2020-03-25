@@ -48,8 +48,9 @@ public class DBconnector implements AutoCloseable{
     public void addItem(String type, String color, String owner){
         try (Session session = driver.session()){
         	//session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $x})", parameters("x", name)));
-        	session.writeTransaction(tx -> tx.run("CREATE (n:ClothingPiece {type: $t, color:$c, owner: $o, state: 'clean'})",
-        			parameters("t", type, "c", color, "o", owner)));       
+        	session.run("match(m:User{username: $o}) CREATE (n:ClothingPiece{"
+        			+ "type: $t, color:$c, owner: m.username, state: 'clean'})<-[:owns]-(m)"        			        			
+        			,parameters("t", type, "c", color, "o", owner));       
         }
     }
     
@@ -83,7 +84,7 @@ public class DBconnector implements AutoCloseable{
 
     public void removeItem(String owner, String item, String color) {
     	try (Session session = driver.session()){
-            session.run("MATCH (n:ClothingPiece { owner: $o, type: $t, color: $c }) DELETE n",
+            session.run("MATCH (n:ClothingPiece { owner: $o, type: $t, color: $c }) DETACH DELETE n",
             		parameters("o", owner, "t", item, "c", color));
     	}
     }
