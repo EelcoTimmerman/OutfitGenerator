@@ -2,8 +2,15 @@
 <html>
 
 <head>
+
+ 
+      <!-- template for the modal component -->
+      <script type="text/x-template" id="modal-template">
+
+      </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue"></script>
   <style>
     body {
       font-family: Arial, Helvetica, sans-serif;
@@ -261,6 +268,7 @@
     v-bind:city="city"
     v-bind:outfitmessage="outfitmessage"
     v-bind:weathermessage="weathermessage"
+    v-bind:modelcomp="showModal"
     v-on:reset-outfit="resetOutfit"
     v-on:advanced-settings="advancedSettings"
     v-on:do-refresh="refresh"
@@ -273,9 +281,12 @@
     v-on:get-weather = "getWeather">
     </home-screen>
     <error-screen 
-    v-else>
+    v-else-if="page == 2">
     </error-screen>
-
+    <modal
+    v-else-if="page == 3"
+    v-on:set-preferences = "setPreferences">
+    </modal>
   </div>
 
   <!-- <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button> -->
@@ -337,9 +348,10 @@
 
     Vue.component('home-screen', {
       props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata', 'componentkey', 'city',
-      'outfitmessage', 'weathermessage'],
+      'outfitmessage', 'weathermessage', 'modelcomp'],
       data() {
         return {
+          modelcompon: false,
           item2: undefined,
           color: undefined,
           itemremove:undefined,
@@ -424,7 +436,10 @@
                 <button v-on:click="getweather">Include weather data</button>
               </div>
               <span >Do you want to customize your outfit even further?</span>
-              <button v-on:click="advancedsettings">Advanced settings</button>
+                  <button id="showModal" @click="modelcompon = true">Advanced Settings</button>
+                  <modal v-if="modelcompon" @close="modelcompon = false">
+                      <h3 slot="header">Set here your personal preferences!</h3>
+                  </modal>
               <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button> 
               </div>
             </div>
@@ -448,7 +463,7 @@
             </div>
           </div>
 
-            </div>`,
+            </div>` ,
       methods: {
         additem() {
           if (!this.item2) {
@@ -520,9 +535,71 @@
       },
       template: `
                     <div>Are you trying to hack inside my outfit generator? It's not so easy, you fool.</div>
-                `,
-      methods: {
+                `
+    });
 
+    Vue.component("modal", {
+      data() {
+        return {
+          temperature: 20,
+          primarycolor: "None",
+          secondarycolor: "None"
+        }
+      },
+          template: `
+          <div class="modal-mask">
+            <div class="modal-wrapper">
+              <div class="modal-container">
+  
+                <div class="modal-header">
+                  <slot name="header">
+                    default header
+                  </slot>
+                </div>
+  
+                <div class="modal-body">
+                  <slot name="body">
+                    <span >Primary color of interest</span>
+                    <select id="colors1" v-model="primarycolor">
+                      <option selected="selected"> None</option>
+                      <option>Red</option>
+                      <option>Green</option>
+                      <option>Blue</option>
+                      <option>Orange</option>
+                      <option>Black</option>
+                      <option>White</option>
+                    </select><br>
+                    <span >Secondary color of interest</span>
+                    <select id="colors2" v-model="secondarycolor">
+                      <option selected="selected"> None</option>
+                      <option>Red</option>
+                      <option>Green</option>
+                      <option>Blue</option>
+                      <option>Orange</option>
+                      <option>Black</option>
+                      <option>White</option>
+                    </select><br>
+                    <span >Which temperature do you consider as nice and comfy for a summer outfit?</span>
+                    <input type="number" placeholder="temp" value="20" v-model="temperature"><br>
+                  </slot>
+                </div>
+  
+                <div class="modal-footer">
+                  <slot name="footer">
+                    <button class="modal-default-button" v-on:click="setpreferences" >
+                      Confirm preferences
+                    </button>
+                  </slot>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+      methods: {
+        setpreferences(){
+          this.$emit('set-preferences', this.temperature, this.primarycolor, this.secondarycolor);
+          this.$emit('close')
+        }
       }
     });
 
@@ -538,7 +615,8 @@
         weatherdata: [-1,-1,-1],
         outfitmessage: "",
         weathermessage:"",
-        refreshkey: 0
+        refreshkey: 0,
+        showModal: false
       },
       methods: {
         async refresh() {
@@ -716,6 +794,11 @@
           this.weatherdata[2] = res.rain;
           this.weathermessage = res.weathermessage;
           this.refresh();
+        },
+        async setPreferences(temp, prim, sec){
+          console.log(temp);
+          console.log(prim);
+          console.log(sec);
         }
       }
 
