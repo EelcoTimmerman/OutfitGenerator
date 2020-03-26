@@ -48,13 +48,6 @@ public class Weather {
 	    	e.printStackTrace();
 	    	output.put("message", "No weather data available.");
 	    }
-		if(temp>20) {
-			output.put("weathermessage", "It's a warm day today, so to make you feel comfortable"
-					+ " we have selected a summer outfit for you!");
-		}else {
-			output.put("weathermessage", "It's a bit cold today, so to make you feel comfy " + 
-					"we have selected a nice and warm outfit for you!");
-		}
 		output.put("rain", rain);
 		output.put("clouds", clouds);         
 		output.put("temp", temp);  

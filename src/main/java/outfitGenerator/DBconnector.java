@@ -22,26 +22,9 @@ public class DBconnector implements AutoCloseable{
         driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ) );
     }
 
-
     @Override
     public void close() throws Exception{
         driver.close();
-    }
-
-    public void printGreeting( final String message){
-        try ( Session session = driver.session() ){
-            String greeting = session.writeTransaction( new TransactionWork<String>(){
-                @Override
-                public String execute( Transaction tx ){
-                    Result result = tx.run( "CREATE (a:Greeting) " +
-                                                     "SET a.message = $message " +
-                                                     "RETURN a.message + ', from node ' + id(a)",
-                            parameters( "message", message ) );
-                    return result.single().get( 0 ).asString();
-                }
-            } );
-            System.out.println( greeting );
-        }
     }
     
 
@@ -92,8 +75,17 @@ public class DBconnector implements AutoCloseable{
     public String proposeItem(String owner, String item) {
     	String finalResult = null;
     	try (Session session = driver.session()){
-    		Result result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t, state: 'clean'})"
-    				+ "SET n.state = 'proposed' RETURN n.color LIMIT 1", parameters("o", owner, "t", item));
+    		Result result;
+    		if(!item.equals("Shoes")) {
+        		 result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t,"
+        				+ " state: 'clean'}) SET n.state = 'proposed' RETURN n.color LIMIT 1",
+        				parameters("o", owner, "t", item));
+    		}else {
+       		 	result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t,"
+     				+ " state: 'clean'}) RETURN n.color LIMIT 1",
+     				parameters("o", owner, "t", item));
+    		}
+
     		finalResult = result.next().get("n.color").toString();
     		finalResult = finalResult.substring(1, finalResult.length()-1);
     		return finalResult;
@@ -151,9 +143,19 @@ public class DBconnector implements AutoCloseable{
     }
     
     public void setWeather(float temp, float clouds, float rain) {
+    	int roundedTemp = Math.round(temp);
     	try (Session session = driver.session()){
     		session.run("MATCH (n:Weather) SET n = { temp: $t, clouds: $w, rain: $r }",
-        			parameters("t", temp, "w", clouds, "r", rain)); 
+        			parameters("t", roundedTemp, "w", clouds, "r", rain)); 
+    	}
+    }
+    
+    public int getTemp() {
+    	try (Session session = driver.session()){
+    		Result result = session.run("MATCH (n:Weather) RETURN n.temp");
+    		return result.next().get("n.temp", -1) ;
+    	}catch(Exception e) {
+    		return -2;
     	}
     }
     

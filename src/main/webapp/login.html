@@ -263,11 +263,10 @@
     v-bind:cleanitems="cleanitems"
     v-bind:dirtyitems="dirtyitems"
     v-bind:outfitpieces="outfit"
-    v-bind:weatherdata="weatherdata"
-    v-bind:componentkey="refreshkey"
-    v-bind:city="city"
     v-bind:outfitmessage="outfitmessage"
-    v-bind:weathermessage="weathermessage"
+    v-bind:weatherdata="weatherdata"
+    v-bind:refreshkey="refreshkey"
+    v-bind:city="city"
     v-on:reset-outfit="resetOutfit"
     v-on:do-refresh="refresh"
     v-on:item-added="addItem"
@@ -283,7 +282,7 @@
     v-else-if="page == 2">
     </error-screen>
     <modal
-    v-else-if="page == 3">
+    v-else-if="page == 3" >
     </modal>
   </div>
 
@@ -345,11 +344,12 @@
     });
 
     Vue.component('home-screen', {
-      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'weatherdata', 'componentkey', 'city',
-      'outfitmessage', 'weathermessage'],
+      props: [ 'username', 'cleanitems', 'dirtyitems', 'outfitpieces', 'outfitmessage'
+      ,'weatherdata', 'refreshkey', 'city'],
       data() {
         return {
           modelcompon: false,
+          custompref: false,
           item2: undefined,
           color: undefined,
           itemremove:undefined,
@@ -422,23 +422,23 @@
                 <option>I just need clothes</option>
               </select>
               <br>
-              <div v-if=" weatherdata[1] > -1 && componentkey>-1">
-                <span>Today's weather in: {{city}} </span><br>
-                <span>Temperature: {{weatherdata[0]}} </span><br>
-                <span>Percentage of clouds: {{weatherdata[1]}}</span><br>
-                <span>Milimeters of rain: {{weatherdata[2]}}</span><br>
-                <button v-on:click="excludeweather">Exclude weather data</button>
-              </div>
-              <div v-if="weatherdata[1] == -1 && componentkey>-1">
-                <span >Do you want to take the weather into account?</span>
-                <button v-on:click="getweather">Include weather data</button>
-              </div>
-              <span >Do you want to customize your outfit even further?</span>
-                  <button id="showModal" @click="modelcompon = true" >Advanced Settings</button>
-                  <modal v-if="modelcompon"  @set-preferences-modal="setpreferences">
-                      <h3 slot="header">Set here your personal preferences!</h3>
+                  <div v-if="modelcompon === false">
+                    <span >Do you want to customize your outfit even further?</span>
+                    <button id="showModal" @click="modelcompon = true" >Customize</button>
+                  </div>
+                  <modal
+                    v-if="modelcompon"
+                    @set-preferences-modal="setpreferences"
+                    v-bind:weatherdata="weatherdata"
+                    v-bind:refreshkey="refreshkey"
+                    v-bind:city="city">
+                    <h3 slot="header">Set here your personal preferences!</h3>
                   </modal>
-              <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button> 
+                  <div v-if="modelcompon === false">
+                  <br><input type="checkbox" id="checkbox" v-model="custompref">
+                  <label for="checkbox">Use custom preferences(recommended)</label>
+                  <button class = "createOutfit" v-on:click="proposeoutfit">Create outfit </button>
+                  </div> 
               </div>
             </div>
 
@@ -448,9 +448,8 @@
             </div>
 
             </div>
-            <div v-if="outfitpieces.length > 1">
+            <div v-if="outfitpieces.length > 1 ">
               <span>{{outfitmessage}}<br></span>
-              <span v-if="weatherdata[1] > -1">{{weathermessage}}</span><br>
               <div v-for="piece in outfitpieces"> {{ piece[0] }} {{ piece[1] }}<br></div>
               <div id="buttoncontainer">
                 <button class = "acceptAndNewButton" v-on:click="acceptoutfit">
@@ -468,7 +467,6 @@
             this.errorMessage = "Put item name!";
             return;
           }
-
           if (!this.color) {
             this.errorMessage = "Specify your color, please...";
             return;
@@ -485,7 +483,7 @@
         },
         proposeoutfit(){
           this.errorMessage = ""  
-          this.$emit('create-outfit');
+          this.$emit('create-outfit', this.custompref, this.weatherdata[1]);
         },
         acceptoutfit(){
           this.errorMessage = "";
@@ -506,15 +504,6 @@
         dolaundry(){
           this.errorMessage = "";
           this.$emit('do-laundry');
-        },
-        getweather(){
-          this.refreshkey += 1;
-          this.$emit('do-refresh');
-          this.$emit('get-weather');
-        },
-        excludeweather(){
-          this.weatherdata[1]= -1;
-          this.$emit('do-refresh');
         },
         setpreferences(temp, prim, sec){
           this.modelcompon = false;
@@ -538,6 +527,7 @@
     });
 
     Vue.component('modal', {
+      props: ['weatherdata', 'refreshkey', 'city'],
       data() {
         return {
           temperature: 20,
@@ -558,6 +548,18 @@
   
                 <div class="modal-body">
                   <slot name="body">
+                    <div v-if=" weatherdata[1] > -1 && refreshkey>-1">
+                      <span>Today's weather in: {{city}} </span><br>
+                      <span>Temperature: {{weatherdata[0]}} </span><br>
+                      <span>Percentage of clouds: {{weatherdata[1]}}</span><br>
+                      <span>Milimeters of rain: {{weatherdata[2]}}</span><br>
+                      <button v-on:click="excludeweather">Exclude weather data</button>
+                    </div>
+                    <div v-else>
+                      <span >Do you want to take the weather into account?</span>
+                      <button v-on:click="getweather">Include weather data</button>
+                    </div>
+
                     <span >Primary color of interest</span>
                     <select id="colors1" v-model="primarycolor">
                       <option selected="selected"> None</option>
@@ -599,6 +601,13 @@
           console.log("arrived here")
           this.$emit('set-preferences-modal', this.temperature, this.primarycolor, this.secondarycolor);
           this.$emit('close');
+        },getweather(){
+          this.$parent.$emit('do-refresh');
+          this.$parent.$emit('get-weather');
+        },
+        excludeweather(){
+          this.weatherdata[1]= -1;
+          this.$parent.$emit('do-refresh');
         }
       }
     });
@@ -614,7 +623,6 @@
         outfit: [],
         weatherdata: [-1,-1,-1],
         outfitmessage: "",
-        weathermessage:"",
         refreshkey: 0
       },
       methods: {
@@ -708,8 +716,14 @@
           })
           console.log(this.outfit);
         },
-        async proposeOutfit() {
-          console.log("outfit proposed")
+        async proposeOutfit(pref, weather) {
+          console.log(weather)
+          var preferences = "";
+          if(pref === true){
+            preferences = "true";
+          }else{
+            preferences = "false";
+          }
           const user = this.loginusername;
           const response = await fetch('api/createoutfit', {
             method: 'POST',
@@ -717,12 +731,12 @@
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({owner: user})
+            body: JSON.stringify({owner: user, item:preferences, color:weather})
           });
           const res = await response.json();
           this.outfit = [];
           console.log(res);
-          if(res.message === "OK"){
+          if(res.status === "OK"){
             this.outfitmessage = res.outfitmessage;
             for (i = 0; i < res.items.length; i++) {
               var item = [];
@@ -735,7 +749,7 @@
             console.log("mess not OK:")
             var item = [];
             item.push("Common..  ");
-            item.push(res.message);
+            item.push(res.outfitmessage);
             this.outfit.push(item);
             console.log(res.message);
           }
@@ -800,7 +814,6 @@
           this.weatherdata[0] = res.temp;
           this.weatherdata[1] = res.clouds;
           this.weatherdata[2] = res.rain;
-          this.weathermessage = res.weathermessage;
           this.refresh();
         }
       }
