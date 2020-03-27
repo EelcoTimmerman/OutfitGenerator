@@ -355,6 +355,7 @@
           itemremove:undefined,
           colorremove:undefined,
           errorMessage: "",
+          outfitmotivation:"None",
           extrakey: 0
         }
       },
@@ -412,14 +413,13 @@
           <div id = "demobox" style="clear:both">
             <h2>Create here your own custom outfit!</h2>
             <div v-if="outfitpieces.length == 0">
-              <span >What is the purpose of your outfit?</span>
+              <span >Which is the look you wanna rock today?</span>
               <div>
-              <select>
-                <option>Please select your motivation for wearing clothes today.</option>
-                <option>Bussiness</option>
-                <option>Recreational</option>
-                <option>I go to the beach</option>
-                <option>I just need clothes</option>
+              <select v-model="outfitmotivation">
+                <option selected= "selected">Casual</option>
+                <option>Fashionable</option>
+                <option>Spicy</option>
+                <option>Stylish</option>
               </select>
               <br>
                   <div v-if="modelcompon === false">
@@ -483,7 +483,7 @@
         },
         proposeoutfit(){
           this.errorMessage = ""  
-          this.$emit('create-outfit', this.custompref, this.weatherdata[1]);
+          this.$emit('create-outfit', this.custompref, this.weatherdata[1], this.outfitmotivation);
         },
         acceptoutfit(){
           this.errorMessage = "";
@@ -716,8 +716,8 @@
           })
           console.log(this.outfit);
         },
-        async proposeOutfit(pref, weather) {
-          console.log(weather)
+        async proposeOutfit(pref, weather, motivation) {
+          console.log(motivation)
           var preferences = "";
           if(pref === true){
             preferences = "true";
@@ -731,7 +731,7 @@
               'Accept': 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({owner: user, item:preferences, color:weather})
+            body: JSON.stringify({owner: user, item:preferences, color:weather, temp:motivation})
           });
           const res = await response.json();
           this.outfit = [];
@@ -751,7 +751,6 @@
             item.push("Common..  ");
             item.push(res.outfitmessage);
             this.outfit.push(item);
-            console.log(res.message);
           }
         },
         async acceptOutfit() {
