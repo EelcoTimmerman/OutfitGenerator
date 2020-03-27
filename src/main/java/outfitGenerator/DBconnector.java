@@ -90,9 +90,28 @@ public class DBconnector implements AutoCloseable{
     		finalResult = finalResult.substring(1, finalResult.length()-1);
     		return finalResult;
     	}
-
     }
     
+    public String proposeItem(String owner, String item, String color) {
+    	String finalResult = null;
+    	try (Session session = driver.session()){
+    		Result result;
+    		if(!item.equals("Shoes")) {
+        		 result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t,"
+        				+ "color:$c, state: 'clean'}) SET n.state = 'proposed' RETURN n.color LIMIT 1",
+        				parameters("o", owner, "t", item, "c", color));
+    		}else {
+       		 	result = session.run("MATCH (n:ClothingPiece { owner: $o, type: $t,"
+     				+ " state: 'clean'}) RETURN n.color LIMIT 1",
+     				parameters("o", owner, "t", item, "c", color));
+    		}
+
+    		finalResult = result.next().get("n.color").toString();
+    		finalResult = finalResult.substring(1, finalResult.length()-1);
+    		return finalResult;
+    	}
+    }
+          
     public void setProposedClean(String owner) {
     	try (Session session = driver.session()){
             session.run("MATCH (n:ClothingPiece { owner: $o, state: 'proposed'})"
@@ -159,16 +178,26 @@ public class DBconnector implements AutoCloseable{
     	}
     }
     
-    public void setPreferences(String temp, String prim, String sec) {
-//    	try (Session session = driver.session()){
-//    		session.run(""
-//    				+ "MERGE (n:Preference) SET n = { temp: $t, clouds: $w, rain: $r }",
-//        			parameters("t", temp, "w", clouds, "r", rain)); 
-//    		
-//    		
-//    		match(m:User{username: $o}) CREATE (n:ClothingPiece{"
-//        			+ "type: $t, color:$c, owner: m.username, state: 'clean'})<-[:owns]-(m)"
-//    	}
+    public void setPreferences(String user, String temp, String prim, String sec) {
+    	try (Session session = driver.session()){
+    		session.run("MATCH(m:User{username: $u}) MERGE (n:Preference) <-[:has]-(m)"
+    				+ " SET n = { temp: $t, primary: $p, secundary: $s}",
+        			parameters("u", user, "t", temp, "p", prim, "s", sec)); 
+    	}
+    }
+    
+    public String[] getPreferences(String user) {
+    	String[] preferences = {"None","None", "20"};
+    	try (Session session = driver.session()){
+    		Result result = session.run("MATCH (n:Preference)<-[:has]-(m:User{username: $u})"
+    				+ "RETURN n.primary, n.secundary, n.temp",
+        			parameters("u", user));    				
+    		Record r = result.next();
+    		preferences[0] = r.get("n.primary", "None");
+    		preferences[1] = r.get("n.secundary", "None");
+    		preferences[2] = r.get("n.temp", "20");
+    	}
+    	return preferences;
     }
     
 }

@@ -33,7 +33,7 @@ public class SetPreferences{
 		output.put("user", user);
 
         try ( DBconnector db = new DBconnector( "bolt://localhost:7687", "neo4j", "Neo4j1" ) ){
-        	//db.setPreferences(user, temp, prim, sec);
+        	db.setPreferences(user, temp, prim, sec);
         }
 		String stringoutput = output.toJSONString();
         return Response.status(200).entity(stringoutput).build();
